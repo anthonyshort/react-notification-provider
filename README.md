@@ -1,10 +1,190 @@
-# TSDX React User Guide
+# react-notifications-hook
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+This makes it easy to create your own notification system in your React app without having to buy into some prescribed
+styling or templating. It does this by giving you three things:
 
-> This TSDX setup is meant for developing React components (not apps!) that can be published to NPM. If you’re looking to build an app, you should use `create-react-app`, `razzle`, `nextjs`, `gatsby`, or `react-static`.
+- `useNotificationQueue` hook to create a queue of notifications in your app.
+- `createNotificationContext` to create a hook and provider pair to create your own provider.
 
-> If you’re new to TypeScript and React, checkout [this handy cheatsheet](https://github.com/sw-yx/react-typescript-cheatsheet/)
+## Usage
+
+First you'll need to create your own `NotificationProvider` and render it at the top of your app.
+
+> If you're using Next this would mean in `pages/_app.tsx`.
+
+This component will be used to render the list of notifications.
+
+```tsx
+export function NotificationProvider(props: Props): JSX.Element {
+  const { children } = props;
+  const queue = useNotificationQueue<Notification>();
+
+  return (
+    <div>
+      {children}
+      <div>
+        {queue.list.map(notification => (
+          <div>{notification.data.title}</div>
+        ))}
+      </div>
+    <div>
+  );
+}
+```
+
+Next you'll need to create the context provider and hook, passing in the notification type if you're using Typescript.
+
+```tsx
+export type Notification = {
+  duration?: number;
+  title?: string;
+  type?: 'success' | 'error';
+};
+
+const {
+  useNotifications,
+  NotificationQueueProvider,
+} = createNotificationContext<Notification>();
+```
+
+Now you want to add this queue provider to `NotificationProvider`.
+
+```tsx
+export function NotificationProvider(props: Props): JSX.Element {
+  const { children } = props;
+  const queue = useNotificationQueue<Notification>();
+
+  return (
+    <NotificationQueueProvider queue={queue}>
+      {children}
+      <div>
+        {queue.list.map(notification => (
+          <div>{notification.data.title}</div>
+        ))}
+      </div>
+    </NotificationQueueProvider>
+  );
+}
+
+export { useNotifications };
+```
+
+Here I've wrapped the children and notification in the provider and I've exported the hook. The provider will allow
+the rest of the components in your app to access the notifications.
+
+You can add animation to your notifications easily using [Framer motion](https://www.framer.com/motion/). Just import it:
+
+```ts
+import { motion, AnimatePresence } from 'framer-motion';
+```
+
+And then wrap your notifications.
+
+```tsx
+export function NotificationProvider(props: Props): JSX.Element {
+  const { children } = props;
+  const queue = useNotificationQueue<Notification>();
+
+  return (
+    <NotificationQueueProvider queue={queue}>
+      {children}
+      <AnimatePresence>
+        {queue.list.map(notification => {
+          return (
+            <motion.div
+              key={queued.id}
+              positionTransition
+              initial={{ opacity: 0, y: 50, scale: 0.3 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+            >
+              {notification.data.title}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </NotificationQueueProvider>
+  );
+}
+
+export { useNotifications };
+```
+
+Now in your components you can simply import the hook:
+
+```tsx
+import { useNotification } from 'lib/notifications-provider';
+
+function MyComponent() {
+  const notifications = useNotifications();
+
+  function notify() {
+    notifications.add('example', {
+      title: 'Hello world',
+    });
+  }
+
+  return <div onClick={notify}>Show notification</div>;
+}
+```
+
+## Example
+
+This is an example `NotificationProvider` you'll need to create for your app.
+
+> Note: You'll still need to apply your own styling.
+
+```tsx
+import React from 'react';
+import {
+  useNotificationQueue,
+  createNotificationContext,
+} from 'react-notifications-hook';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Props {
+  children: React.ReactNode;
+}
+
+export type Notification = {
+  duration?: number;
+  title?: string;
+  type?: 'success' | 'error';
+};
+
+const {
+  NotificationQueueProvider,
+  useNotifications,
+} = createNotificationContext<Notification>();
+
+export function NotificationProvider(props: Props): JSX.Element {
+  const { children } = props;
+  const notifications = useNotificationQueue<Notification>();
+
+  return (
+    <NotificationQueueProvider queue={notifications}>
+      {children}
+      <AnimatePresence>
+        {notifications.list.map(notification => {
+          return (
+            <motion.div
+              key={queued.id}
+              positionTransition
+              initial={{ opacity: 0, y: 50, scale: 0.3 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+            >
+              {notification.data.title}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </NotificationQueueProvider>
+  );
+}
+
+export { useNotifications };
+```
 
 ## Commands
 

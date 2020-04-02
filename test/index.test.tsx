@@ -15,7 +15,7 @@ describe('useNotificationQueue', () => {
     expect(result.current.list.length).toEqual(1);
     expect(result.current.list[0]).toEqual({
       id: 'test',
-      notification: { message: 'test' },
+      data: { message: 'test' },
     });
 
     act(() => {

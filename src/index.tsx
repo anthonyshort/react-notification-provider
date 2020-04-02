@@ -6,7 +6,7 @@ import React, { useState, createContext, useContext } from 'react';
  */
 export type Queued<Notification> = {
   id: string;
-  notification: Notification;
+  data: Notification;
 };
 
 /**
@@ -59,12 +59,12 @@ export function useNotificationQueue<Notification>(): Queue<Notification> {
         if (matchIndex > -1) {
           copy.splice(matchIndex, 1, {
             id,
-            notification,
+            data: notification,
           });
         } else {
           copy.push({
             id,
-            notification,
+            data: notification,
           });
         }
         return copy;
