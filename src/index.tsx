@@ -42,7 +42,7 @@ export function createNotificationContext<Notification>() {
   function useNotifications(): Queue<Notification> {
     const queue = useContext(NotificationQueueContext);
     if (!queue) {
-      throw new Error('Missing <NotificationQueueProvider>');
+      throw new Error('Missing <NotificationProvider>');
     }
     return queue;
   }
@@ -51,14 +51,14 @@ export function createNotificationContext<Notification>() {
    * This component should wrap your app. It allows components to use the useNotifications hook.
    * @param props
    */
-  function NotificationQueueProvider(props: {
-    queue: Queue<Notification>;
-    children: React.ReactNode;
+  function NotificationProvider(props: {
+    children: (items: Queued<Notification>[]) => React.ReactNode;
   }): JSX.Element {
-    const { queue, children } = props;
+    const { children } = props;
+    const queue = useNotificationQueue();
     return (
       <NotificationQueueContext.Provider value={queue}>
-        {children}
+        {children(queue.list)}
       </NotificationQueueContext.Provider>
     );
   }
@@ -74,7 +74,7 @@ export function createNotificationContext<Notification>() {
    * This is useful for tests and stories.
    * @param props
    */
-  function MockNotificationQueueProvider(
+  function MockNotificationProvider(
     props: MockProps<Notification>
   ): JSX.Element {
     const { queue, children } = props;
@@ -220,8 +220,8 @@ export function createNotificationContext<Notification>() {
 
   return {
     NotificationQueueContext,
-    NotificationQueueProvider,
-    MockNotificationQueueProvider,
+    NotificationProvider,
+    MockNotificationProvider,
     useNotifications,
     useNotificationQueue,
     createMockNotificationQueue,

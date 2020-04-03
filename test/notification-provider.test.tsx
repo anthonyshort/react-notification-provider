@@ -9,11 +9,9 @@ interface Notification {
   message: string;
 }
 
-const {
-  MockNotificationProvider,
-  useNotifications,
-  createMockNotificationQueue,
-} = createNotificationContext<Notification>();
+const { useNotifications, NotificationProvider } = createNotificationContext<
+  Notification
+>();
 
 function TestComponent() {
   const notifications = useNotifications();
@@ -48,71 +46,62 @@ function TestComponent() {
   );
 }
 
-describe('MockNotificationQueueProvider', () => {
+describe('NotificationProvider', () => {
   afterEach(cleanup);
 
   it('should add and remove a notification', async () => {
-    const queue = createMockNotificationQueue();
-
-    const { findByText } = render(
-      <MockNotificationProvider queue={queue}>
-        <TestComponent />
-      </MockNotificationProvider>
+    const { findByText, findByTestId } = render(
+      <NotificationProvider>
+        {notifications => (
+          <>
+            <TestComponent />
+            <div data-testid="notifications">
+              {notifications.map(notification => (
+                <div key={notification.id}>{notification.data.message}</div>
+              ))}
+            </div>
+          </>
+        )}
+      </NotificationProvider>
     );
 
     const addButton = await findByText('Add');
     const addOtherButton = await findByText('Add other');
     const removeButton = await findByText('Remove');
     const removeAllButton = await findByText('Remove all');
+    const notificationList = await findByTestId('notifications');
 
     act(() => {
       fireEvent.click(addButton);
     });
 
-    expect(queue.list.length).toEqual(1);
-    expect(queue.list[0]).toEqual({
-      id: 'test',
-      data: { message: 'test' },
-    });
+    expect(notificationList.children.length).toEqual(1);
+    expect(notificationList.children[0].innerHTML).toEqual('test');
 
     act(() => {
       fireEvent.click(removeButton);
     });
 
-    expect(queue.list).toEqual([]);
+    expect(notificationList.children.length).toEqual(0);
 
     act(() => {
       fireEvent.click(addButton);
       fireEvent.click(addOtherButton);
     });
 
-    expect(queue.list.length).toEqual(2);
+    expect(notificationList.children.length).toEqual(2);
 
     act(() => {
       fireEvent.click(addButton);
     });
 
     // It should just update the existing notification
-    expect(queue.list.length).toEqual(2);
+    expect(notificationList.children.length).toEqual(2);
 
     act(() => {
       fireEvent.click(removeAllButton);
     });
 
-    expect(queue.list.length).toEqual(0);
-  });
-
-  it('should still work with no queue passed in', async () => {
-    const { findByText } = render(
-      <MockNotificationProvider>
-        <TestComponent />
-      </MockNotificationProvider>
-    );
-
-    const addButton = await findByText('Add');
-
-    act(() => {
-      fireEvent.click(addButton);
-    });
+    expect(notificationList.children.length).toEqual(0);
   });
 });
