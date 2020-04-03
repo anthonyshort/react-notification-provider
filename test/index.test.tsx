@@ -1,5 +1,11 @@
 import { renderHook, cleanup, act } from '@testing-library/react-hooks';
-import { useNotificationQueue } from '../src';
+import { createNotificationContext } from '../src';
+
+interface Notification {
+  message: string;
+}
+
+const { useNotificationQueue } = createNotificationContext<Notification>();
 
 describe('useNotificationQueue', () => {
   afterEach(cleanup);
