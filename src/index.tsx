@@ -4,7 +4,7 @@ import React, { useState, createContext, useContext } from 'react';
  * Represents a queued item. The ID is used internally to reference every notification. The generic types is intended
  * to be used by the end user so they can have a custom notification shape.
  */
-export type Queued<Data> = {
+export type QueuedItem<Data> = {
   id: string;
   data: Data;
 };
@@ -16,7 +16,7 @@ export interface ImmutableQueue<T> {
   add: (id: string, data: T) => ImmutableQueue<T>;
   remove: (id: string) => ImmutableQueue<T>;
   removeAll: () => ImmutableQueue<T>;
-  entries: Queued<T>[];
+  entries: QueuedItem<T>[];
 }
 
 interface MockProps<Notification> {
@@ -28,7 +28,7 @@ export interface QueueHook<T> {
   add: (id: string, data: T) => void;
   remove: (id: string) => void;
   removeAll: () => void;
-  entries: Queued<T>[];
+  entries: QueuedItem<T>[];
 }
 
 /**
@@ -92,45 +92,8 @@ export function useQueue<T>(initialValue: ImmutableQueue<T>): QueueHook<T> {
  * Create an immutable queue. Adding and removing items will return a new queue.
  */
 export function createImmutableQueue<T>(
-  items: Queued<T>[] = []
+  entries: QueuedItem<T>[] = []
 ): ImmutableQueue<T> {
-  return {
-    add(id: string, data: T): ImmutableQueue<T> {
-      const matchIndex = items.findIndex(n => {
-        return n.id === id;
-      });
-      const copy = items.slice();
-      if (matchIndex > -1) {
-        copy.splice(matchIndex, 1, {
-          id,
-          data,
-        });
-      } else {
-        copy.push({
-          id,
-          data,
-        });
-      }
-      return createImmutableQueue(copy);
-    },
-    remove(id: string): ImmutableQueue<T> {
-      return createImmutableQueue(items.filter(n => n.id !== id));
-    },
-    removeAll(): ImmutableQueue<T> {
-      return createImmutableQueue();
-    },
-    entries: items,
-  };
-}
-
-/**
- * Create a mutable queue. Adding and removing items will return the same queue.
- */
-export function createMockImmutableQueue<T>(
-  initialValue: Queued<T>[] = []
-): ImmutableQueue<T> {
-  const entries: Queued<T>[] = initialValue;
-
   return {
     add(id: string, data: T): ImmutableQueue<T> {
       const matchIndex = entries.findIndex(n => {
@@ -148,18 +111,44 @@ export function createMockImmutableQueue<T>(
           data,
         });
       }
-      entries.splice(0, entries.length);
-      entries.push(...copy);
+      return createImmutableQueue(copy);
+    },
+    remove(id: string): ImmutableQueue<T> {
+      return createImmutableQueue(entries.filter(n => n.id !== id));
+    },
+    removeAll(): ImmutableQueue<T> {
+      return createImmutableQueue();
+    },
+    entries,
+  };
+}
+
+/**
+ * Create a mutable queue. Adding and removing items will return the same queue.
+ */
+export function createMockImmutableQueue<T>(
+  initialValue: QueuedItem<T>[] = []
+): ImmutableQueue<T> {
+  const entries = initialValue;
+  const updateEntries = (queue: ImmutableQueue<T>) => {
+    entries.splice(0, entries.length);
+    entries.push(...queue.entries);
+  };
+
+  return {
+    add(id: string, data: T): ImmutableQueue<T> {
+      const queue = createImmutableQueue(entries).add(id, data);
+      updateEntries(queue);
       return this;
     },
     remove(id: string): ImmutableQueue<T> {
-      const copy = entries.filter(n => n.id !== id);
-      entries.splice(0, entries.length);
-      entries.push(...copy);
+      const queue = createImmutableQueue(entries).remove(id);
+      updateEntries(queue);
       return this;
     },
     removeAll(): ImmutableQueue<T> {
-      entries.splice(0, entries.length);
+      const queue = createImmutableQueue(entries).removeAll();
+      updateEntries(queue);
       return this;
     },
     entries,

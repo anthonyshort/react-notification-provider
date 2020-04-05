@@ -11,7 +11,7 @@ Easily create your own notification system in your React app without having to b
 
 ```tsx
 function MyComponent() {
-  const notification = useNotification();
+  const notification = useNotificationQueue();
 
   function notify() {
     notification.add('example', {
@@ -71,11 +71,11 @@ In this example we're rendering a components, `NotificationList` that will load 
 import { notifications } from 'lib/notifications';
 
 function NotificationList() {
-  const notifications = useNotificationQueue();
+  const queue = useNotificationQueue();
 
   return (
     <div>
-      {notifications.list.map(({ id, data }) => (
+      {queue.entries.map(({ id, data }) => (
         <Notification key={id} message={data.message} />
       ))}
     </div>
@@ -90,11 +90,11 @@ import { useNotificationQueue } from 'lib/notifications';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function NotificationList() {
-  const notifications = useNotificationQueue();
+  const queue = useNotificationQueue();
 
   return (
     <AnimatePresence>
-      {notifications.map(({ id, data }) => (
+      {queue.entries.map(({ id, data }) => (
         <motion.div
           key={id}
           positionTransition
@@ -116,14 +116,11 @@ Now when you want to trigger a notification from anywhere in your application yo
 import { useNotificationQueue } from 'lib/notifications';
 
 function MyComponent() {
-  const notifications = useNotificationQueue();
+  const notification = useNotificationQueue();
 
   function onClick() {
-    notifications.add({
-      id: 'example',
-      data: {
-        title: 'Hello world',
-      },
+    notification.add('example', {
+      title: 'Hello world',
     });
   }
 
