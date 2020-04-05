@@ -11,12 +11,12 @@ interface Notification {
 
 const {
   MockNotificationProvider,
-  useNotifications,
+  useNotificationQueue,
   createMockNotificationQueue,
 } = createNotificationContext<Notification>();
 
 function TestComponent() {
-  const notifications = useNotifications();
+  const notifications = useNotificationQueue();
 
   function add() {
     notifications.add('test', {

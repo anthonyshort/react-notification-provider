@@ -1,17 +1,15 @@
 import { renderHook, cleanup, act } from '@testing-library/react-hooks';
-import { createNotificationContext } from '../src';
+import { useQueue } from '../src';
 
 interface Notification {
   message: string;
 }
 
-const { useNotificationQueue } = createNotificationContext<Notification>();
-
-describe('useNotificationQueue', () => {
+describe('useQueue', () => {
   afterEach(cleanup);
 
-  it('should add and remove a notification', () => {
-    const { result } = renderHook(() => useNotificationQueue());
+  it('should add and remove a queued item', () => {
+    const { result } = renderHook(() => useQueue<Notification>());
     expect(result.current.list).toEqual([]);
 
     act(() => {

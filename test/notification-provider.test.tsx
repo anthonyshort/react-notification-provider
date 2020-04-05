@@ -9,12 +9,13 @@ interface Notification {
   message: string;
 }
 
-const { useNotifications, NotificationProvider } = createNotificationContext<
-  Notification
->();
+const {
+  useNotificationQueue,
+  NotificationProvider,
+} = createNotificationContext<Notification>();
 
 function TestComponent() {
-  const notifications = useNotifications();
+  const notifications = useNotificationQueue();
 
   function add() {
     notifications.add('test', {
