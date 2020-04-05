@@ -86,7 +86,7 @@ In this example we're rendering a components, `NotificationList` that will load 
 > In this example, `<Notification />` would be your custom component that renders a notification UI component.
 
 ```tsx
-import { notifications } from 'lib/notifications';
+import { useNotificationQueue } from 'lib/notifications';
 
 function NotificationList() {
   const queue = useNotificationQueue();
