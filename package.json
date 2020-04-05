@@ -31,9 +31,9 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "react-notifications-hook",
+  "name": "react-notification-provider",
   "author": "Anthony Short",
-  "module": "dist/react-notifications-hook.esm.js",
+  "module": "dist/react-notification-provider.esm.js",
   "devDependencies": {
     "@sheerun/mutationobserver-shim": "^0.3.3",
     "@testing-library/react": "^10.0.2",

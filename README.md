@@ -1,8 +1,9 @@
-# react-notifications-hook
+# react-notification-provider
 
 Easily create your own notification system in your React app without having to buy into prescribed styling or templating.
 
 ## Why?
+
 - No styling included
 - Uses React hooks and context
 - Typescript support
@@ -11,6 +12,7 @@ Easily create your own notification system in your React app without having to b
 - Easily animate notifications using [Framer Motion](https://www.framer.com/motion/).
 
 ## What it looks like
+
 ```tsx
 function MyComponent() {
   const notifications = useNotifications();
@@ -35,7 +37,7 @@ First create a type for your notifications. Unlike other libraries there is no s
 interface Notification {
   message: string;
   duration: number;
-  level: 'success' | 'error'
+  level: 'success' | 'error';
 }
 ```
 
@@ -116,7 +118,9 @@ function NotificationListProvider(props: Props) {
 To access the notifications API from your components you'll need to export the `useNotifications` hook that is created for you:
 
 ```ts
-const { NotificationProvider, useNotifications } = createNotificationProvider<Notification>();
+const { NotificationProvider, useNotifications } = createNotificationProvider<
+  Notification
+>();
 ```
 
 Then export it alongside `NotificationListProvider`:
