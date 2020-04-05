@@ -69,8 +69,8 @@ describe('MockNotificationQueueProvider', () => {
       fireEvent.click(addButton);
     });
 
-    expect(queue.list.length).toEqual(1);
-    expect(queue.list[0]).toEqual({
+    expect(queue.entries.length).toEqual(1);
+    expect(queue.entries[0]).toEqual({
       id: 'test',
       data: { message: 'test' },
     });
@@ -79,27 +79,27 @@ describe('MockNotificationQueueProvider', () => {
       fireEvent.click(removeButton);
     });
 
-    expect(queue.list).toEqual([]);
+    expect(queue.entries).toEqual([]);
 
     act(() => {
       fireEvent.click(addButton);
       fireEvent.click(addOtherButton);
     });
 
-    expect(queue.list.length).toEqual(2);
+    expect(queue.entries.length).toEqual(2);
 
     act(() => {
       fireEvent.click(addButton);
     });
 
     // It should just update the existing notification
-    expect(queue.list.length).toEqual(2);
+    expect(queue.entries.length).toEqual(2);
 
     act(() => {
       fireEvent.click(removeAllButton);
     });
 
-    expect(queue.list.length).toEqual(0);
+    expect(queue.entries.length).toEqual(0);
   });
 
   it('should still work with no queue passed in', async () => {

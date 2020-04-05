@@ -12,16 +12,23 @@ export type Queued<Data> = {
 /**
  * This is the returned result from the hook
  */
-export interface Queue<Data> {
-  add: (id: string, data: Data) => void;
-  remove: (id: string) => void;
-  removeAll: () => void;
-  list: Queued<Data>[];
+export interface ImmutableQueue<T> {
+  add: (id: string, data: T) => ImmutableQueue<T>;
+  remove: (id: string) => ImmutableQueue<T>;
+  removeAll: () => ImmutableQueue<T>;
+  entries: Queued<T>[];
 }
 
 interface MockProps<Notification> {
-  queue?: Queue<Notification>;
+  queue?: ImmutableQueue<Notification>;
   children: React.ReactNode;
+}
+
+export interface QueueHook<T> {
+  add: (id: string, data: T) => void;
+  remove: (id: string) => void;
+  removeAll: () => void;
+  entries: Queued<T>[];
 }
 
 /**
@@ -46,8 +53,8 @@ interface MockProps<Notification> {
  *        )
  *      }
  */
-export function useQueue<T>(): Queue<T> {
-  const [queue, setQueue] = useState<Queued<T>[]>([]);
+export function useQueue<T>(initialValue: ImmutableQueue<T>): QueueHook<T> {
+  const [queue, setQueue] = useState(initialValue);
 
   return {
     /**
@@ -56,24 +63,7 @@ export function useQueue<T>(): Queue<T> {
      * @param data
      */
     add(id: string, data: T): void {
-      setQueue(queue => {
-        const matchIndex = queue.findIndex(n => {
-          return n.id === id;
-        });
-        const copy = queue.slice();
-        if (matchIndex > -1) {
-          copy.splice(matchIndex, 1, {
-            id,
-            data,
-          });
-        } else {
-          copy.push({
-            id,
-            data,
-          });
-        }
-        return copy;
-      });
+      setQueue(queue => queue.add(id, data));
     },
 
     /**
@@ -81,35 +71,35 @@ export function useQueue<T>(): Queue<T> {
      * @param id Unique string identifier for a notification
      */
     remove(id: string): void {
-      setQueue(queue => queue.filter(n => n.id !== id));
+      setQueue(queue => queue.remove(id));
     },
 
     /**
      * Remove all notifications from the page.
      */
     removeAll(): void {
-      setQueue([]);
+      setQueue(queue => queue.removeAll());
     },
 
     /**
      * The current array of notifications.
      */
-    list: queue,
+    entries: queue.entries,
   };
 }
 
 /**
- * Create a mock queue for use in tests
+ * Create an immutable queue. Adding and removing items will return a new queue.
  */
-export function createMockQueue<T>(): Queue<T> {
-  let list: Queued<T>[] = [];
-
+export function createImmutableQueue<T>(
+  items: Queued<T>[] = []
+): ImmutableQueue<T> {
   return {
-    add(id: string, data: T): void {
-      const matchIndex = list.findIndex(n => {
+    add(id: string, data: T): ImmutableQueue<T> {
+      const matchIndex = items.findIndex(n => {
         return n.id === id;
       });
-      const copy = list.slice();
+      const copy = items.slice();
       if (matchIndex > -1) {
         copy.splice(matchIndex, 1, {
           id,
@@ -121,18 +111,58 @@ export function createMockQueue<T>(): Queue<T> {
           data,
         });
       }
-      list.splice(0, list.length);
-      list.push(...copy);
+      return createImmutableQueue(copy);
     },
-    remove(id: string): void {
-      const copy = list.filter(n => n.id !== id);
-      list.splice(0, list.length);
-      list.push(...copy);
+    remove(id: string): ImmutableQueue<T> {
+      return createImmutableQueue(items.filter(n => n.id !== id));
     },
-    removeAll(): void {
-      list.splice(0, list.length);
+    removeAll(): ImmutableQueue<T> {
+      return createImmutableQueue();
     },
-    list,
+    entries: items,
+  };
+}
+
+/**
+ * Create a mutable queue. Adding and removing items will return the same queue.
+ */
+export function createMockImmutableQueue<T>(
+  initialValue: Queued<T>[] = []
+): ImmutableQueue<T> {
+  const entries: Queued<T>[] = initialValue;
+
+  return {
+    add(id: string, data: T): ImmutableQueue<T> {
+      const matchIndex = entries.findIndex(n => {
+        return n.id === id;
+      });
+      const copy = entries.slice();
+      if (matchIndex > -1) {
+        copy.splice(matchIndex, 1, {
+          id,
+          data,
+        });
+      } else {
+        copy.push({
+          id,
+          data,
+        });
+      }
+      entries.splice(0, entries.length);
+      entries.push(...copy);
+      return this;
+    },
+    remove(id: string): ImmutableQueue<T> {
+      const copy = entries.filter(n => n.id !== id);
+      entries.splice(0, entries.length);
+      entries.push(...copy);
+      return this;
+    },
+    removeAll(): ImmutableQueue<T> {
+      entries.splice(0, entries.length);
+      return this;
+    },
+    entries,
   };
 }
 
@@ -144,14 +174,14 @@ export function createMockQueue<T>(): Queue<T> {
  * This allows you to skip some of the ceremony needed to setup your own notification renderer.
  */
 export function createNotificationContext<Notification>() {
-  const NotificationQueueContext = createContext<Queue<Notification> | null>(
-    null
-  );
+  const NotificationQueueContext = createContext<QueueHook<
+    Notification
+  > | null>(null);
 
   /**
    * This hook allows you to add and remove notifications from within your components.
    */
-  function useNotificationQueue(): Queue<Notification> {
+  function useNotificationQueue(): QueueHook<Notification> {
     const queue = useContext(NotificationQueueContext);
     if (!queue) {
       throw new Error('Missing <NotificationProvider>');
@@ -164,13 +194,13 @@ export function createNotificationContext<Notification>() {
    * @param props
    */
   function NotificationProvider(props: {
-    children: (items: Queued<Notification>[]) => React.ReactNode;
+    children: React.ReactNode;
   }): JSX.Element {
     const { children } = props;
-    const queue = useQueue<Notification>();
+    const queue = useQueue<Notification>(createImmutableQueue());
     return (
       <NotificationQueueContext.Provider value={queue}>
-        {children(queue.list)}
+        {children}
       </NotificationQueueContext.Provider>
     );
   }
@@ -190,7 +220,9 @@ export function createNotificationContext<Notification>() {
     props: MockProps<Notification>
   ): JSX.Element {
     const { queue, children } = props;
-    const [value] = useState(queue ? queue : createMockQueue<Notification>());
+    const [value] = useState(
+      queue ? queue : createImmutableQueue<Notification>()
+    );
     return (
       <NotificationQueueContext.Provider value={value}>
         {children}
@@ -199,7 +231,8 @@ export function createNotificationContext<Notification>() {
   }
 
   /**
-   * Create a fake notification queue that can be used during tests and stories.
+   * Create a fake notification queue that can be used during tests and stories. Unlike the normal queue this one isn't
+   * immutable, so you'll be able to inspect the state of the queue between renders:
    *
    *      const queue = createMockNotificationQueue();
    *
@@ -221,7 +254,7 @@ export function createNotificationContext<Notification>() {
    * This will let you test that notifications are correctly firing without needing to look for elements in the DOM.
    */
   function createMockNotificationQueue() {
-    return createMockQueue<Notification>();
+    return createMockImmutableQueue<Notification>();
   }
 
   return {

@@ -47,22 +47,26 @@ function TestComponent() {
   );
 }
 
+function NotificationList() {
+  const notifications = useNotificationQueue();
+
+  return (
+    <div data-testid="notifications">
+      {notifications.entries.map(notification => (
+        <div key={notification.id}>{notification.data.message}</div>
+      ))}
+    </div>
+  );
+}
+
 describe('NotificationProvider', () => {
   afterEach(cleanup);
 
   it('should add and remove a notification', async () => {
     const { findByText, findByTestId } = render(
       <NotificationProvider>
-        {notifications => (
-          <>
-            <TestComponent />
-            <div data-testid="notifications">
-              {notifications.map(notification => (
-                <div key={notification.id}>{notification.data.message}</div>
-              ))}
-            </div>
-          </>
-        )}
+        <TestComponent />
+        <NotificationList />
       </NotificationProvider>
     );
 
