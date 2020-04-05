@@ -164,9 +164,9 @@ const queue = createMockNotificationQueue();
 const addNotification = jest.spyOn(queue, 'add');
 
 const { findByText } = render(
-  <MockNotificationProvider queue={queue}>
+  <NotificationProvider queue={queue}>
     <TestComponent />
-  </MockNotificationProvider>
+  </NotificationProvider>
 );
 ```
 
