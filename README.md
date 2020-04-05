@@ -146,6 +146,10 @@ function MyComponent() {
 }
 ```
 
+## Example
+
+You can try the example by running `yarn install` and `yarn start` within the `/example` directory.
+
 ## Testing
 
 You can mock the notification system when using Storybook or writing tests. The `createNotificationContext` function returns a `createMockNotificationQueue` that can create a fake queue that can be passed into `NotificationProvider`:
