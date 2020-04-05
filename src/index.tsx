@@ -19,7 +19,7 @@ export interface ImmutableQueue<T> {
   entries: QueuedItem<T>[];
 }
 
-interface MockProps<Notification> {
+interface ProviderProps<Notification> {
   queue?: ImmutableQueue<Notification>;
   children: React.ReactNode;
 }
@@ -182,38 +182,15 @@ export function createNotificationContext<Notification>() {
    * This component should wrap your app. It allows components to use the useNotifications hook.
    * @param props
    */
-  function NotificationProvider(props: {
-    children: React.ReactNode;
-  }): JSX.Element {
-    const { children } = props;
-    const queue = useQueue<Notification>(createImmutableQueue());
+  function NotificationProvider(
+    props: ProviderProps<Notification>
+  ): JSX.Element {
+    const { children, queue: initialQueue } = props;
+    const queue = useQueue<Notification>(
+      initialQueue ? initialQueue : createImmutableQueue()
+    );
     return (
       <NotificationQueueContext.Provider value={queue}>
-        {children}
-      </NotificationQueueContext.Provider>
-    );
-  }
-
-  /**
-   * Create a mock provider to use in tests. You can optionally pass in a custom queue so you can inspect the
-   * notifications that can be fired.
-   *
-   *      <MockNotificationQueueProvider>
-   *        <Component />
-   *      </MockNotificationQueueProvider>
-   *
-   * This is useful for tests and stories.
-   * @param props
-   */
-  function MockNotificationProvider(
-    props: MockProps<Notification>
-  ): JSX.Element {
-    const { queue, children } = props;
-    const [value] = useState(
-      queue ? queue : createImmutableQueue<Notification>()
-    );
-    return (
-      <NotificationQueueContext.Provider value={value}>
         {children}
       </NotificationQueueContext.Provider>
     );
@@ -242,6 +219,10 @@ export function createNotificationContext<Notification>() {
    *
    * This will let you test that notifications are correctly firing without needing to look for elements in the DOM.
    */
+  function createNotificationQueue() {
+    return createImmutableQueue<Notification>();
+  }
+
   function createMockNotificationQueue() {
     return createMockImmutableQueue<Notification>();
   }
@@ -249,8 +230,8 @@ export function createNotificationContext<Notification>() {
   return {
     NotificationQueueContext,
     NotificationProvider,
-    MockNotificationProvider,
     useNotificationQueue,
+    createNotificationQueue,
     createMockNotificationQueue,
   };
 }

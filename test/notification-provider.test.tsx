@@ -12,6 +12,7 @@ interface Notification {
 const {
   useNotificationQueue,
   NotificationProvider,
+  createMockNotificationQueue,
 } = createNotificationContext<Notification>();
 
 function TestComponent() {
@@ -108,5 +109,97 @@ describe('NotificationProvider', () => {
     });
 
     expect(notificationList.children.length).toEqual(0);
+  });
+
+  it('should allow mocking a custom queue', async () => {
+    const queue = createMockNotificationQueue();
+    const addNotification = jest.spyOn(queue, 'add');
+    const removeNotification = jest.spyOn(queue, 'remove');
+    const removeAllNotifications = jest.spyOn(queue, 'removeAll');
+
+    const { findByText } = render(
+      <NotificationProvider queue={queue}>
+        <TestComponent />
+      </NotificationProvider>
+    );
+
+    const addButton = await findByText('Add');
+    const removeButton = await findByText('Remove');
+    const removeAllButton = await findByText('Remove all');
+
+    act(() => {
+      fireEvent.click(addButton);
+    });
+
+    expect(addNotification).toHaveBeenCalledWith('test', {
+      message: 'test',
+    });
+
+    act(() => {
+      fireEvent.click(removeButton);
+    });
+
+    expect(removeNotification).toHaveBeenCalledWith('test');
+
+    act(() => {
+      fireEvent.click(removeAllButton);
+    });
+
+    expect(removeAllNotifications).toHaveBeenCalled();
+  });
+
+  it('should allow passing in a mock notification queue', async () => {
+    const queue = createMockNotificationQueue();
+
+    const { findByText } = render(
+      <NotificationProvider queue={queue}>
+        <TestComponent />
+      </NotificationProvider>
+    );
+
+    const addButton = await findByText('Add');
+    const addOtherButton = await findByText('Add other');
+    const removeButton = await findByText('Remove');
+    const removeAllButton = await findByText('Remove all');
+
+    act(() => {
+      fireEvent.click(addButton);
+    });
+
+    expect(queue.entries.length).toEqual(1);
+    expect(queue.entries).toEqual([
+      {
+        id: 'test',
+        data: {
+          message: 'test',
+        },
+      },
+    ]);
+
+    act(() => {
+      fireEvent.click(removeButton);
+    });
+
+    expect(queue.entries.length).toEqual(0);
+
+    act(() => {
+      fireEvent.click(addButton);
+      fireEvent.click(addOtherButton);
+    });
+
+    expect(queue.entries.length).toEqual(2);
+
+    act(() => {
+      fireEvent.click(addButton);
+    });
+
+    // It should just update the existing notification
+    expect(queue.entries.length).toEqual(2);
+
+    act(() => {
+      fireEvent.click(removeAllButton);
+    });
+
+    expect(queue.entries.length).toEqual(0);
   });
 });
