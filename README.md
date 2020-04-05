@@ -157,9 +157,7 @@ const {
 } = createNotificationContext<Notification>();
 ```
 
-In your tests you can create a queue, pass it in, and then inspect the queue to make sure events were fired.
-
-Here's an example using jest but you could do something similar with other mocking libraries, like sinon:
+In your tests you can create a queue, pass it in, and then inspect the queue to make sure events were fired. Here's an example using jest but you could do something similar with other mocking libraries, like sinon:
 
 ```tsx
 const queue = createMockNotificationQueue();
