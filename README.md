@@ -213,10 +213,8 @@ You can also leave out the queue if you don't need to listen for notifications:
 
 ```tsx
 const { findByText } = render(
-  <MockNotificationProvider>
+  <NotificationProvider>
     <TestComponent />
-  </MockNotificationProvider>
+  </NotificationProvider>
 );
 ```
-
-This will
