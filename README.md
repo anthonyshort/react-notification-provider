@@ -44,7 +44,7 @@ yarn add react-notification-provider
 You'll start by using the `createNotificationContext` function to create the React context, hooks, and helpers. You should create this in a file you can import throughout your application. In this example, we'll create it as `lib/notifications/index.tsx`.
 
 ```ts
-import { createNotificationProvider } from 'react-notification-provider';
+import { createNotificationContext } from 'react-notification-provider';
 
 // You can customize the notification interface to include whatever props your notifications need to render.
 interface Notification {
@@ -57,7 +57,7 @@ interface Notification {
 const {
   NotificationProvider,
   useNotificationQueue,
-} = createNotificationProvider<Notification>();
+} = createNotificationContext<Notification>();
 
 export { NotificationProvider, useNotificationQueue };
 ```
