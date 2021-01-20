@@ -77,7 +77,7 @@ function Notification(props) {
     return (): void => {
       clearTimeout(timeout);
     };
-  }, [duration]);
+  }, [id, duration, notifications.remove]);
 
   return (
     <div

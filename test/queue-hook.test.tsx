@@ -50,4 +50,28 @@ describe('useQueue', () => {
 
     expect(result.current.entries.length).toEqual(0);
   });
+
+  it('should memoize add/remove/removeAll', () => {
+    const { result } = renderHook(() =>
+      useQueue<Notification>(createImmutableQueue())
+    );
+
+    const { add, remove, removeAll } = result.current;
+
+    act(() => {
+      result.current.add('test', { message: 'test' });
+    });
+
+    expect(result.current.add).toBe(add);
+    expect(result.current.remove).toBe(remove);
+    expect(result.current.removeAll).toBe(removeAll);
+
+    act(() => {
+      result.current.remove('test');
+    });
+
+    expect(result.current.add).toBe(add);
+    expect(result.current.remove).toBe(remove);
+    expect(result.current.removeAll).toBe(removeAll);
+  });
 });
