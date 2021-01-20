@@ -1,4 +1,10 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+  createContext,
+  useContext,
+} from 'react';
 
 /**
  * Represents a queued item. The ID is used internally to reference every notification. The generic types is intended
@@ -54,38 +60,47 @@ export interface QueueHook<T> {
  *      }
  */
 export function useQueue<T>(initialValue: ImmutableQueue<T>): QueueHook<T> {
-  const [queue, setQueue] = useState(initialValue);
+  const [{ entries }, setQueue] = useState(initialValue);
 
-  return {
-    /**
-     * Add a new notification to the queue. If the ID already exists it will updated.
-     * @param id Unique string identifier for notification.
-     * @param data
-     */
-    add(id: string, data: T): void {
+  /**
+   * Add a new notification to the queue. If the ID already exists it will updated.
+   * @param id Unique string identifier for notification.
+   * @param data
+   */
+  const add = useCallback(
+    (id: string, data: T): void => {
       setQueue(queue => queue.add(id, data));
     },
+    [setQueue]
+  );
 
-    /**
-     * Remove a notification by ID
-     * @param id Unique string identifier for a notification
-     */
-    remove(id: string): void {
+  /**
+   * Remove a notification by ID
+   * @param id Unique string identifier for a notification
+   */
+  const remove = useCallback(
+    (id: string): void => {
       setQueue(queue => queue.remove(id));
     },
+    [setQueue]
+  );
 
-    /**
-     * Remove all notifications from the page.
-     */
-    removeAll(): void {
-      setQueue(queue => queue.removeAll());
-    },
+  /**
+   * Remove all notifications from the page.
+   */
+  const removeAll = useCallback((): void => {
+    setQueue(queue => queue.removeAll());
+  }, [setQueue]);
 
-    /**
-     * The current array of notifications.
-     */
-    entries: queue.entries,
-  };
+  return useMemo(
+    () => ({
+      add,
+      remove,
+      removeAll,
+      entries,
+    }),
+    [add, remove, removeAll, entries]
+  );
 }
 
 /**
