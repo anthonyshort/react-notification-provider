@@ -74,4 +74,54 @@ describe('useQueue', () => {
     expect(result.current.remove).toBe(remove);
     expect(result.current.removeAll).toBe(removeAll);
   });
+
+  it('should call the onRemove callback when removing a notification', () => {
+    const onRemoveCalls: string[] = [];
+
+    const reset = () => {
+      onRemoveCalls.splice(0, onRemoveCalls.length);
+    };
+
+    const onRemove = (id: string) => () => {
+      onRemoveCalls.push(id);
+    };
+
+    {
+      const { result } = renderHook(() =>
+        useQueue<Notification>(createImmutableQueue())
+      );
+      act(() => {
+        result.current.add('test', { message: 'test' }, onRemove('test'));
+      });
+
+      expect(onRemoveCalls).toEqual([]);
+      act(() => {
+        result.current.remove('test');
+      });
+
+      expect(onRemoveCalls).toEqual(['test']);
+    }
+
+    reset();
+
+    {
+      const { result } = renderHook(() =>
+        useQueue<Notification>(createImmutableQueue())
+      );
+
+      // Add multiple
+      act(() => {
+        result.current.add('test', { message: 'test' }, onRemove('test'));
+        result.current.add('test2', { message: 'test' }, onRemove('test2'));
+      });
+
+      expect(onRemoveCalls).toEqual([]);
+
+      act(() => {
+        result.current.removeAll();
+      });
+
+      expect(onRemoveCalls).toEqual(['test', 'test2']);
+    }
+  });
 });

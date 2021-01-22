@@ -6,7 +6,6 @@ import { createNotificationContext } from '../.';
 
 interface Notification {
   message: string;
-  duration:
 }
 
 const {
@@ -18,10 +17,9 @@ function Button() {
   const notifications = useNotificationQueue();
 
   function addNotification() {
-    notifications.add(Date.now().toString(), {
-      message: 'Hello',
-      duration: 3000
-    });
+    const id = Date.now().toString();
+    const timeout = setTimeout(() => notifications.remove(id), 3000);
+    notifications.add(id, { message: 'Hello' }, () => clearTimeout(timeout));
   }
 
   function clearAll() {
@@ -58,7 +56,7 @@ function NotificationList() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
           >
-            <Notification id={id} message={data.message} duration={data.duration} />
+            <Notification message={data.message} />
           </motion.div>
         ))}
       </AnimatePresence>
@@ -66,19 +64,7 @@ function NotificationList() {
   );
 }
 
-function Notification(props) {
-  const { id, message, duration } = props;
-  const notifications = useNotificationQueue();
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      notifications.remove(id);
-    }, duration);
-    return (): void => {
-      clearTimeout(timeout);
-    };
-  }, [id, duration, notifications.remove]);
-
+function Notification({ message }) {
   return (
     <div
       style={{
