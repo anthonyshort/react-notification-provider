@@ -40,4 +40,41 @@ describe('createImmutableQueue', () => {
 
     expect(q6.entries.length).toEqual(0);
   });
+
+  it('should call the onRemove callback when removing a notification', () => {
+    const onRemoveCalls: string[] = [];
+
+    const reset = () => {
+      onRemoveCalls.splice(0, onRemoveCalls.length);
+    };
+
+    const onRemove = (id: string) => () => {
+      onRemoveCalls.push(id);
+    };
+
+    const q1 = createImmutableQueue<Notification>();
+
+    const q2 = q1.add('test', { message: 'test' }, onRemove('test'));
+
+    expect(onRemoveCalls).toEqual([]);
+
+    q2.remove('test');
+
+    expect(onRemoveCalls).toEqual(['test']);
+
+    reset();
+
+    const q3 = createImmutableQueue<Notification>();
+
+    // Add multiple
+    const q4 = q3
+      .add('test', { message: 'test' }, onRemove('test'))
+      .add('test2', { message: 'test' }, onRemove('test2'));
+
+    expect(onRemoveCalls).toEqual([]);
+
+    q4.removeAll();
+
+    expect(onRemoveCalls).toEqual(['test', 'test2']);
+  });
 });

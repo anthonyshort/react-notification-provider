@@ -13,13 +13,14 @@ import React, {
 export type QueuedItem<Data> = {
   id: string;
   data: Data;
+  onRemove?: () => void;
 };
 
 /**
  * This is the returned result from the hook
  */
 export interface ImmutableQueue<T> {
-  add: (id: string, data: T) => ImmutableQueue<T>;
+  add: (id: string, data: T, onRemove?: () => void) => ImmutableQueue<T>;
   remove: (id: string) => ImmutableQueue<T>;
   removeAll: () => ImmutableQueue<T>;
   entries: QueuedItem<T>[];
@@ -31,7 +32,7 @@ interface ProviderProps<Notification> {
 }
 
 export interface QueueHook<T> {
-  add: (id: string, data: T) => void;
+  add: (id: string, data: T, onRemove?: () => void) => void;
   remove: (id: string) => void;
   removeAll: () => void;
   entries: QueuedItem<T>[];
@@ -66,10 +67,11 @@ export function useQueue<T>(initialValue: ImmutableQueue<T>): QueueHook<T> {
    * Add a new notification to the queue. If the ID already exists it will updated.
    * @param id Unique string identifier for notification.
    * @param data
+   * @param onRemove A callback that is called when the notification is removed from the queue.
    */
   const add = useCallback(
-    (id: string, data: T): void => {
-      setQueue(queue => queue.add(id, data));
+    (id: string, data: T, onRemove?: () => void) => {
+      setQueue(queue => queue.add(id, data, onRemove));
     },
     [setQueue]
   );
@@ -110,7 +112,7 @@ export function createImmutableQueue<T>(
   entries: QueuedItem<T>[] = []
 ): ImmutableQueue<T> {
   return {
-    add(id: string, data: T): ImmutableQueue<T> {
+    add(id: string, data: T, onRemove?: () => void): ImmutableQueue<T> {
       const matchIndex = entries.findIndex(n => {
         return n.id === id;
       });
@@ -119,19 +121,32 @@ export function createImmutableQueue<T>(
         copy.splice(matchIndex, 1, {
           id,
           data,
+          onRemove,
         });
       } else {
         copy.push({
           id,
           data,
+          onRemove,
         });
       }
       return createImmutableQueue(copy);
     },
     remove(id: string): ImmutableQueue<T> {
-      return createImmutableQueue(entries.filter(n => n.id !== id));
+      return createImmutableQueue(
+        entries.filter(n => {
+          const keep = n.id !== id;
+          if (!keep) {
+            n.onRemove?.();
+          }
+          return keep;
+        })
+      );
     },
     removeAll(): ImmutableQueue<T> {
+      for (const n of entries) {
+        n.onRemove?.();
+      }
       return createImmutableQueue();
     },
     entries,
@@ -151,8 +166,8 @@ export function createMockImmutableQueue<T>(
   };
 
   return {
-    add(id: string, data: T): ImmutableQueue<T> {
-      const queue = createImmutableQueue(entries).add(id, data);
+    add(id: string, data: T, onRemove?: () => void): ImmutableQueue<T> {
+      const queue = createImmutableQueue(entries).add(id, data, onRemove);
       updateEntries(queue);
       return this;
     },

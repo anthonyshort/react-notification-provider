@@ -131,9 +131,13 @@ describe('NotificationProvider', () => {
       fireEvent.click(addButton);
     });
 
-    expect(addNotification).toHaveBeenCalledWith('test', {
-      message: 'test',
-    });
+    expect(addNotification).toHaveBeenCalledWith(
+      'test',
+      {
+        message: 'test',
+      },
+      undefined
+    );
 
     act(() => {
       fireEvent.click(removeButton);
