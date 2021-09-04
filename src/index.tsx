@@ -25,7 +25,7 @@ export interface ImmutableQueue<T> {
   entries: QueuedItem<T>[];
 }
 
-interface ProviderProps<Notification> {
+export interface ProviderProps<Notification> {
   queue?: ImmutableQueue<Notification>;
   children: React.ReactNode;
 }
